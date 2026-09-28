@@ -28,13 +28,13 @@ RUN mkdir -p ~/.streamlit && \
     echo "\n\
 [server]\n\
 headless = true\n\
-port = 8501\n\
+port = 8502\n\
 enableCORS = false\n\
 maxUploadSize = 200\n\
 " > ~/.streamlit/config.toml
 
 # Membuka port yang digunakan oleh Streamlit
-EXPOSE 8501
+EXPOSE 8502
 
 # Perintah utama untuk menjalankan aplikasi (sesuaikan 'app.py' dengan nama file Anda)
 CMD ["streamlit", "run", "app.py"]
