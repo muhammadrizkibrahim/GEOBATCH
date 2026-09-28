@@ -8,7 +8,7 @@ ENV PYTHONUNBUFFERED=1
 # Mengatur direktori kerja di dalam kontainer
 WORKDIR /app
 
-# Menginstal dependensi sistem dasar yang mungkin dibutuhkan pustaka C/C++
+# Menginstal dependensi sistem dasar untuk OpenCV & C/C++
 RUN apt-get update && apt-get install -y \
     build-essential \
     libglib2.0-0 \
@@ -23,18 +23,20 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Menyalin seluruh kode aplikasi ke dalam kontainer
 COPY . .
 
-# Membuat konfigurasi Streamlit untuk mode produksi dan batas unggahan (200MB)
+# Konfigurasi Streamlit Wajib untuk Coolify / Reverse Proxy
 RUN mkdir -p ~/.streamlit && \
     echo "\n\
 [server]\n\
 headless = true\n\
-port = 8502\n\
+port = 8501\n\
+address = \"0.0.0.0\"\n\
 enableCORS = false\n\
+enableXsrfProtection = false\n\
 maxUploadSize = 200\n\
 " > ~/.streamlit/config.toml
 
-# Membuka port yang digunakan oleh Streamlit
-EXPOSE 8502
+# Expose port internal kontainer
+EXPOSE 8501
 
-# Perintah utama untuk menjalankan aplikasi (sesuaikan 'app.py' dengan nama file Anda)
-CMD ["streamlit", "run", "app.py"]
+# Perintah utama untuk menjalankan aplikasi
+CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
