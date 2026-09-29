@@ -21,7 +21,7 @@ RUN mkdir -p ~/.streamlit && \
     echo "\n\
 [server]\n\
 headless = true\n\
-port = 8501\n\
+port = 8502\n\
 address = \"0.0.0.0\"\n\
 enableCORS = false\n\
 enableXsrfProtection = false\n\
@@ -29,7 +29,7 @@ maxUploadSize = 200\n\
 " > ~/.streamlit/config.toml
 
 # Expose port internal 8501
-EXPOSE 8501
+EXPOSE 8502
 
 # Jalankan Streamlit internal di port 8501
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "app.py", "--server.port=8502", "--server.address=0.0.0.0"]
