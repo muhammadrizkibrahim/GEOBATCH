@@ -14,4 +14,4 @@ COPY . .
 
 EXPOSE 8502
 
-CMD ["streamlit", "run", "app.py", "--server.port=8502", "--server.address=0.0.0.0", "--server.enableCORS=false", "--server.enableXsrfProtection=false"]
+CMD ["streamlit", "run", "app.py", "--server.address=0.0.0.0"]
