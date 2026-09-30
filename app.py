@@ -13,18 +13,13 @@ from rasterio.io import MemoryFile
 import json
 import cv2
 import numpy as np
-import torch
 
-torch.set_num_threads(4)
-torch.set_num_interop_threads(2)
 
 
 # --- Inisialisasi AI Reader (EasyOCR) ---
 @st.cache_resource
 def load_reader():
-    return easyocr.Reader(["en"], gpu=False)
-# def load_reader():
-#     return easyocr.Reader(['en'])
+    return easyocr.Reader(['en'])
 
 reader = load_reader()
 
