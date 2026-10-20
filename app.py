@@ -59,17 +59,24 @@ def extract_map_id(image_bytes):
     top = 0
     right = width
     bottom = height * 0.05
-    
     cropped_image = image.crop((left, top, right, bottom))
     cropped_np = np.array(cropped_image)
     
     result = reader.readtext(cropped_np, detail=0)
     extracted_text = " ".join(result)
-    
     all_numbers = re.findall(r'\d+', extracted_text)
-    valid_numbers = [num for num in all_numbers if len(num) == 16]
     
-    return (valid_numbers[0] if valid_numbers else None), image
+    # Cari yang persis 16 digit terlebih dahulu
+    valid_16 = [num for num in all_numbers if len(num) == 16]
+    if valid_16:
+        return valid_16[0], image
+        
+    # Jika tidak ada, cari yang 14 digit dan tambahkan "00" di akhir
+    valid_14 = [num + "00" for num in all_numbers if len(num) == 14]
+    if valid_14:
+        return valid_14[0], image
+        
+    return None, image
 
 def extract_id_from_filename(filename):
     """Mengekstrak dan menyesuaikan ID 16 digit dari nama file sebagai fallback."""
