@@ -54,43 +54,51 @@ uploaded_files = st.file_uploader("Unggah File Peta (.JPG/.PNG) atau (.ZIP)", ty
 # --- FUNGSI PEMROSESAN GAMBAR ---
 def process_image(image_bytes, original_filename, count_index, zip_out, prefix_text, suffix_text):
     try:
-        # Buka gambar dari memori
-        image = Image.open(io.BytesIO(image_bytes))
-        width, height = image.size
-        
-        # LOGIKA CROP: 30% lebar kanan, 5% tinggi atas
-        left = width * 0.70
-        top = 0
-        right = width
-        bottom = height * 0.05
-        
-        cropped_image = image.crop((left, top, right, bottom))
-        cropped_np = np.array(cropped_image)
-        
-        # Deteksi OCR
-        result = reader.readtext(cropped_np, detail=0)
-        extracted_text = " ".join(result)
-        
-        # Ekstrak semua angka dan filter WAJIB 16 DIGIT
-        all_numbers = re.findall(r'\d+', extracted_text)
-        valid_numbers = [num for num in all_numbers if len(num) == 16]
-        
-        if valid_numbers:
-            map_id = valid_numbers[0]
-        else:
-            map_id = f"ID_TIDAK_DITEMUKAN_{count_index}"
-        
-        # Susun nama baru
-        file_extension = original_filename.split('.')[-1]
-        new_filename = f"{prefix_text}{map_id}{suffix_text}.{file_extension}"
-        
-        # Simpan ke ZIP Output
-        img_byte_arr = io.BytesIO()
-        image.save(img_byte_arr, format=image.format)
-        zip_out.writestr(new_filename, img_byte_arr.getvalue())
-        
-    except Exception as e:
-        st.error(f"❌ Gagal memproses {original_filename}: {e}")
+    # Buka gambar dari memori
+    image = Image.open(io.BytesIO(image_bytes))
+    width, height = image.size
+
+    # LOGIKA CROP: 30% lebar kanan, 5% tinggi atas
+    left = width * 0.70
+    top = 0
+    right = width
+    bottom = height * 0.05
+    cropped_image = image.crop((left, top, right, bottom))
+    cropped_np = np.array(cropped_image)
+
+    # 1. Deteksi OCR pada gambar
+    result = reader.readtext(cropped_np, detail=0)
+    extracted_text = ' '.join(result)
+
+    # Ekstrak semua angka dan filter WAJIB 16 DIGIT dari OCR
+    all_numbers = re.findall(r'\d+', extracted_text)
+    valid_numbers = [num for num in all_numbers if len(num) == 16]
+
+    if valid_numbers:
+      map_id = valid_numbers[0]
+    else:
+      # 2. FALLBACK: Cari ID 16 digit dari NAMA FILE jika OCR gagal
+      filename_numbers = re.findall(r'\d+', original_filename)
+      valid_filename_numbers = [
+          num for num in filename_numbers if len(num) == 16
+      ]
+
+      if valid_filename_numbers:
+        map_id = valid_filename_numbers[0]
+      else:
+        map_id = f'ID_TIDAK_DITEMUKAN_{count_index}'
+
+    # Susun nama baru
+    file_extension = original_filename.split('.')[-1]
+    new_filename = f'{prefix_text}{map_id}{suffix_text}.{file_extension}'
+
+    # Simpan ke ZIP Output
+    img_byte_arr = io.BytesIO()
+    image.save(img_byte_arr, format=image.format)
+    zip_out.writestr(new_filename, img_byte_arr.getvalue())
+
+  except Exception as e:
+    st.error(f'❌ Gagal memproses {original_filename}: {e}')
 
 
 # --- PROSES UTAMA ---
