@@ -71,6 +71,24 @@ def extract_map_id(image_bytes):
     
     return (valid_numbers[0] if valid_numbers else None), image
 
+def extract_id_from_filename(filename):
+    """Mengekstrak dan menyesuaikan ID 16 digit dari nama file sebagai fallback."""
+    # Ambil nama dasar tanpa ekstensi
+    base_name = filename.rsplit('.', 1)[0]
+    
+    # Ambil semua karakter angka saja
+    digits_only = re.sub(r'\D', '', base_name)
+    
+    # Jika digit kurang dari 16 (misal: 14 digit), tambahkan '00' di akhir
+    if len(digits_only) == 14:
+        digits_only += "00"
+        
+    # Kembalikan 16 digit jika panjangnya sudah tepat
+    if len(digits_only) == 16:
+        return digits_only
+    
+    return None
+
 def process_rename_image(img_bytes, original_filename, count_index, zip_out, prefix_text, suffix_text):
     """Fungsi khusus untuk mengeksekusi proses rename dan memasukkannya ke ZIP."""
     try:
@@ -139,21 +157,25 @@ def find_neatline_rect(image_pil):
 def process_georef_image(img_bytes, original_filename, geojson_data, zip_out, pad_x, pad_y):
     """Georeferensi gambar penuh dengan ekstrapolasi koordinat berbasis neatline."""
     try:
+        # 1. Coba baca ID menggunakan OCR
         map_id, image = extract_map_id(img_bytes)
         
+        # 2. Fallback: Jika OCR gagal, ekstrak ID dari original_filename
         if not map_id:
-            st.error(f"❌ {original_filename}: ID Peta tidak terbaca.")
-            return False
+            map_id = extract_id_from_filename(original_filename)
             
+        if not map_id:
+            st.error(f"❌ {original_filename}: ID Peta tidak terbaca dari OCR maupun nama file.")
+            return False
+
         clean_id = str(map_id).split('_')[0]
-        
         target_feature = None
         for feature in geojson_data.get('features', []):
             props = feature.get('properties', {})
             if str(props.get('idsubsls', '')) == clean_id:
                 target_feature = feature
                 break
-                
+
         if not target_feature:
             st.error(f"❌ {original_filename}: ID '{clean_id}' tidak ditemukan di GeoJSON.")
             return False
