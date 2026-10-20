@@ -50,10 +50,30 @@ with col2:
 
 uploaded_files = st.file_uploader("Unggah File Peta (.JPG/.PNG) atau (.ZIP)", type=["jpg", "jpeg", "png", "zip"], accept_multiple_files=True)
 
+def extract_id_from_filename(filename):
+  # 1. Ambil hanya karakter angka dari nama file
+  digits = re.sub(r'\D', '', filename)
 
+  # 2. Jika angka yang ditemukan kurang dari 16 digit, tambahkan '0' di belakang
+  if 0 < len(digits) < 16:
+    digits = digits.ljust(16, '0')
+
+  # 3. Ambil tepat 16 digit pertama jika pas atau lebih
+  if len(digits) >= 16:
+    return digits[:16]
+
+  return None
+    
 # --- FUNGSI PEMROSESAN GAMBAR ---
-def process_image(image_bytes, original_filename, count_index, zip_out, prefix_text, suffix_text):
-    try:
+def process_image(
+    image_bytes,
+    original_filename,
+    count_index,
+    zip_out,
+    prefix_text,
+    suffix_text,
+):
+  try:
     # Buka gambar dari memori
     image = Image.open(io.BytesIO(image_bytes))
     width, height = image.size
@@ -70,21 +90,18 @@ def process_image(image_bytes, original_filename, count_index, zip_out, prefix_t
     result = reader.readtext(cropped_np, detail=0)
     extracted_text = ' '.join(result)
 
-    # Ekstrak semua angka dan filter WAJIB 16 DIGIT dari OCR
+    # Ekstrak angka 16 digit dari OCR
     all_numbers = re.findall(r'\d+', extracted_text)
     valid_numbers = [num for num in all_numbers if len(num) == 16]
 
     if valid_numbers:
       map_id = valid_numbers[0]
     else:
-      # 2. FALLBACK: Cari ID 16 digit dari NAMA FILE jika OCR gagal
-      filename_numbers = re.findall(r'\d+', original_filename)
-      valid_filename_numbers = [
-          num for num in filename_numbers if len(num) == 16
-      ]
+      # 2. FALLBACK: Ambil angka dari nama file & sesuaikan jadi 16 digit
+      fallback_id = extract_id_from_filename(original_filename)
 
-      if valid_filename_numbers:
-        map_id = valid_filename_numbers[0]
+      if fallback_id:
+        map_id = fallback_id
       else:
         map_id = f'ID_TIDAK_DITEMUKAN_{count_index}'
 
